@@ -1,0 +1,1008 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="../../rfc2629.xslt"?>
+<?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
+<?rfc toc="yes"?>
+<?rfc comments="yes"?>
+<?rfc inline="yes"?>
+<?rfc symrefs="yes"?>
+<?rfc sortrefs="yes"?>
+<?rfc compact="yes"?>
+<?rfc subcompact="no"?>
+<?rfc tocdepth="3"?>
+<?rfc strict="yes"?>
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
+        <!ENTITY rfc2119 PUBLIC "" "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.2119.xml">
+        <!ENTITY rfc3339 PUBLIC "" "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3339.xml">
+        <!ENTITY rfc3688 PUBLIC "" "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3688.xml">
+        <!ENTITY rfc3986 PUBLIC "" "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.3986.xml">
+        <!ENTITY rfc7230 PUBLIC "" "http://xml2rfc.ietf.org/public/rfc/bibxml/reference.RFC.7230.xml">
+        ]>
+<rfc category="std"
+     ipr="trust200902"
+     docName="draft-gajda-dav-push-00">
+    <front>
+        <title abbrev="DAV-Push">Push Discovery and Notification Dispatch Protocol</title>
+        <author initials="M."
+                surname="Gajda"
+                fullname="Marten Gajda">
+            <organization abbrev="dmfs">dmfs GmbH</organization>
+            <address>
+                <postal>
+                    <street>Schandauer Straße 34</street>
+                    <city>Dresden</city>
+                    <region/>
+                    <code>01309</code>
+                    <country>Germany</country>
+                </postal>
+                <email>marten@dmfs.org</email>
+                <uri>http://dmfs.org</uri>
+            </address>
+        </author>
+        <date/>
+        <area>Applications</area>
+        <keyword>push</keyword>
+        <keyword>CardDAV</keyword>
+        <keyword>CalDAV</keyword>
+        <keyword>WebDAV</keyword>
+        <abstract>
+            <t>
+                This specification defines a framework and protocols for a push notification system that allows clients, application servers and push
+                notification servers to interact with each other in a standardized manner.
+            </t>
+        </abstract>
+    </front>
+    <middle>
+        <section title="Introduction">
+            <t>In a client/server protocol, clients can typically create, update, delete "resources" (data) on the server, as well as retrieve data on the
+                server.
+            </t>
+            <t>In many cases, data can appear on the server as the result of some other client or server-side process interacting with the server. Thus clients
+                need a way to detect when the data on the server has changed.
+            </t>
+            <t>Most protocols provide a data synchronization mechanism to support that, but typically clients need to "poll" the server to find out when changes
+                have occurred. Network based polling is inefficient, and instead push notifications are preferred as a way of alerting clients to new data or
+                changes to existing data on the server
+            </t>
+        </section>
+        <section title="Conventions Used in This Document">
+            <t>
+                The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+                "OPTIONAL" in this document are to be interpreted as described in
+                <xref target="RFC2119"/>
+            </t>
+            <t>
+                When XML element types in the namespaces "DAV:" and "urn:ietf:params:xml:ns:dav-push" are referenced in this document outside of the context of
+                an XML fragment, the string "DAV:" and "DAV-PUSH:" will be prefixed to the element type names respectively.
+            </t>
+        </section>
+        <section title="Terminology">
+            <t>
+                <list style="hanging">
+                    <t hangText="Application Server">Provides resources a client application might want to monitor for changes.
+                    </t>
+                    <t hangText="Push Gateway">An adapter with a standardized interface that connects Push Delivery Service and Application Server. A Push
+                        Gateway provides or relays one or multiple delivery channels, the so called Transports, to specific Push Delivery Services.
+                    </t>
+                    <t hangText="Push Delivery Service">A Service that provides the actual push transport mechanism to the client application.
+                    </t>
+                    <t hangText="Transport">A transport is a logical channel to a specific Push Delivery Service, provided by a Push Gateway. A Transport is
+                        identified by the transport-uri. If the transport-uri is an HTTPS URL, the providing push gateway MUST accept connections to this URL.
+                    </t>
+                    <t hangText="Client Application">
+                        An application that uses the services of the Application Server and wants to get notified instantaneously about certain changes on the
+                        server. A client application typically runs on a mobile or desktop device.
+                    </t>
+                    <t hangText="Push Notification">
+                        A message sent from the Application server to the Client Application to notify the client of an update. The basic information carried by
+                        the notification is "there was a change" for a specific Topic.
+                    </t>
+                    <t hangText="Topic">A topic is a name for a notification feed or channel. Each watchable resource has a topic that clients can subscribe to.
+                        Each subscriber to a particular topic will receive a notification when a substantial change was made to any of the resources with that
+                        topic.
+                    </t>
+                </list>
+            </t>
+        </section>
+        <section title="Architecture">
+            <t>This document introduces a new entity called "Push Gateway" which acts as a proxy between an application server and a push delivery service. A
+                Push Gateway provides at least one Transport. Each Transport is identified by a URI and connects to exactly one Push Delivery Service.
+            </t>
+            <t>Push Gateways MAY support relaying, so a push gateway might forward all or some notifications to another push gateway.
+            </t>
+            <figure>
+                <artwork><![CDATA[
+    +----------------------------+
+    |     Application Server     |
+    +-----------------------+----+
+           ^                |
+           |                |
+           |                |
+           |                |
+           |                v
+           |      +-------------------------+
+           |      |       Push Gateway      |
+           |      +---------+---------------+
+           |                |
+           |                |
+           |                |
+           |                v
+           |      +-------------------------+
+           |      |  Push delivery Service  |
+           |      +---------+---------------+
+           |                |
+           |                |
+           |                |
+           |                |
+           |                v
+     +-----+--------------------+
+     |     Client Application   |
+     +--------------------------+
+]]></artwork>
+            </figure>
+            <section title="Application Server">
+                <t>The server is responsible for generating push topics and sending update notifications to the Push Gateway. A push topic is a unique token
+                    that identifies the update notification feed of a resource or a group of resources. The topic is forwarded to the Push Gateway whenever a
+                    relevant change in one of these resources occurs.
+                </t>
+                <t>This document doesn't specify how topics are generated. However, for privacy reasons the topic MUST NOT contain user names, user data (like
+                    folder/collection names) or URLs in plain text. If a server doesn't maintain opaque, anonymous identifiers SHOULD use a hash algorithm, like
+                    SHA256 to generate an opaque identifier from resource properties.
+                </t>
+                <t>Push topics MAY be generated on a per-user base for shared resources.
+                </t>
+                <t>A server MAY change push topics at any time to improve privacy. If doing so the server MUST continue to send out push notifications for the
+                    old topic until all subscriptions to that topic have expired.
+                </t>
+                <t>
+                    The application server maintains a mapping of subscribed push topics to a list of push gateways. It updates this mapping whenever
+                    <list style="symbols">
+                        <t>A new subscription request is received,</t>
+                        <t>A response from the push gateway indicates that there are no active subscribers for a particular topic.
+                        </t>
+                    </list>
+                </t>
+                <t>The application server doesn't maintain references to push clients, because this information is opaque to the application server.
+                </t>
+            </section>
+            <section title="Push Gateway">
+                <t>
+                    The Push Gateway maintains a mapping of push-topics to a list of subscribed clients and expiration times. It updates the list whenever
+                    <list style="symbols">
+                        <t>it receives a new subscription,</t>
+                        <t>a subscription expires or</t>
+                        <t>the Push Delivery Service returns that a specific client is no longer available.
+                        </t>
+                    </list>
+                    If a push message for a specific topic is received the push gateway will notify all clients with an active (not expired) subscription for
+                    that topic.
+                </t>
+                <t>A push gateway may relay messages for other gateways. A gateway that supports relaying MUST maintain a map of topics to gateways just like an
+                    application server.
+                </t>
+            </section>
+            <section title="Push Delivery Service">
+                <t>TBD: Minimum requirements for PDS to support this protocol. Describe what state information the PDS needs to maintain.
+                </t>
+            </section>
+            <section title="Client">
+                <t>TBD: what information does the client need to maintain</t>
+            </section>
+        </section>
+        <section title="Protocol Workflows">
+            <section title="App Server &lt;-&gt; Push Gateway bootstrap workflow">
+                <t>
+                    This protocol allows an application server to initialize the supported push transports by querying a set of configured push gateways. This
+                    requires that the application server knows the root URL of each configured gateway. In order to retrieve the list of supported transports it
+                    posts a JSON object with an empty list of push-transports to each gateway.
+                </t>
+                <t>
+                    The following request shows the bootstrap request of an application server that was configured with the Push Gateway URL
+                    https://push.example.com/gateway
+                    <figure>
+                        <artwork><![CDATA[
+POST /gateway
+Host: push.example.com
+Content-Type: application/json
+Content-Length: xxx
+
+{ "push-transports": []}
+]]></artwork>
+                    </figure>
+
+                    The push gateway responds with a JSON object that contains an array of push transports.
+
+                    <figure>
+                        <artwork><![CDATA[
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: xxx
+
+{ "push-transports": [
+  {
+    "transport": {
+      "transport-uri":
+        "https://push.example.com/transport",
+      "refresh-interval": 172800,
+      "transport-data" : { ... }
+    }
+  },{
+    "transport": {
+      "transport-uri":
+        "urn:uuid:01234567-0123-0123-0123-0123456789ab",
+      "refresh-interval": 172800,
+      "transport-data" : { ... }
+    }
+  }]
+}
+]]></artwork>
+                    </figure>
+                    TBD: HTTP status for failure with a XML/JSON error response body
+                </t>
+            </section>
+            <section title="Client &lt;-&gt; App Server workflow">
+                <t>
+                    The communication between Client and Application Server is defined in the respective application protocol. The application protocol needs to
+                    be extended in order to support push.
+                </t>
+                <t>
+                    This document describes the general idea behind the required extensions and gives a concrete definition for a WebDAV extension.
+                </t>
+                <section title="Client discovery and subscription workflow - Generic">
+                    <t>
+                        TBD:
+                    </t>
+                </section>
+                <section title="Unsubscribe">
+                    <t>This document doesn't specify an explicit unsubscribe method. A client that doesn't wish to receive any further push notifications for a
+                        specific topic, MAY send a subscription with an expiration date in the past.
+                    </t>
+                    <t>An application server which receives such a subscription MUST handle it like any other subscription. In particular the Application Server
+                        MUST
+                        <list style="symbols">
+                            <t>verify the Push Topic and</t>
+                            <t>forward the susbcription to the Push Gateway.</t>
+                        </list>
+                    </t>
+                    <t>A Push Gateway which receives a subscription with a passed expiration date MUST
+                        <list style="symbols">
+                            <t>remove the client from the list of subscribers to this topic and</t>
+                            <t>not send out any further push messages to this client.</t>
+                        </list>
+                    </t>
+                </section>
+                <section title="Client discovery and subscription workflow - WebDAV">
+
+                    <section title="Push discovery">
+                        <t>The following example shows a PROPFIND request on a user's calendar home to discover push support.
+
+                            <figure>
+                                <artwork><![CDATA[
+PROPFIND http://calendar.example.com/calendars/
+Content-Type: application/xml
+Depth: 0
+Content-Length: xxx
+
+<D:propfind xmlns:D="DAV:" xmlns:P="urn:ietf:params:xml:ns:dav-push">
+  <D:prop>
+    <P:subscribe-URL> />
+    <P:supported-transport-set />
+    <P:topic />
+    <P:version />
+  </D:prop>
+</D:propfind>
+]]></artwork>
+                            </figure>
+                            The server responds with the respective properties. In this particular case the server added an empty P:transport element to signal
+                            it will accept any transport provided by the client.
+
+                            &gt; Response
+                            <figure>
+                                <artwork><![CDATA[
+
+HTTP/1.1 207 Multistatus
+Content-Type: application/xml; charset=UTF-8
+Content-Length: xxx
+
+<D:multistatus xmlns:D="DAV:">
+  <D:response>
+    <D:href>/calendars/</D:href>
+    <D:propstat>
+      <D:prop>
+        <P:subscribe-URL>
+          <D:href>https://calendar.example.com/subscribe</D:href>
+        </P:subscribe-URL>
+        <P:supported-transport-set>
+          <P:transport />
+          <P:transport>
+            <P:transport-uri
+>urn:uuid:01234567-0123-0123-0123-0123456789ab</P:transport-uri>
+            <P:transport-data>
+              ...
+            </P:transport-data>
+            <P:refresh-interval>172800</P:refresh-interval>
+          </P:transport>
+	      <P:transport>
+	        <P:transport-uri
+>https://push.example.com/transport</P:transport-uri>
+            <P:transport-data>
+              ...
+            </P:transport-data>
+            <P:refresh-interval>172800</P:refresh-interval>
+          </P:transport>
+        </P:supported-transport-set>
+        <P:topic>123</P:topic>
+        <P:version>1</P:version>
+      </D:prop>
+      <D:status>HTTP/1.1 200 OK</D:status>
+    </D:propstat>
+  </D:response>
+</D:multistatus>
+]]></artwork>
+                            </figure>
+                        </t>
+                    </section>
+                    <section title="Push subscribe">
+                        <t>Calendar server -&gt; Client - CS server advertises its supported push mechanisms
+
+                            Clients request POST to P:subscribe-URL - does the actual subscription to the calendar server:
+                            <figure>
+                                <artwork><![CDATA[
+POST /subscribe HTTP/1.1
+Host: calendar.example.com
+Content-Type: application/xml; charset=UTF-8
+
+<P:subscribe xmlns:P="urn:ietf:params:xml:ns:dav-push">
+  <P:topic>123<P:topic>
+  <P:topic>abc<P:topic>
+  <P:selected-transport>
+    <P:transport-uri
+      >https://push.example.com/transport</D:transport-uri>
+    <P:client-data>XYZ</D:client-data>
+  </P:selected-transport>
+  <P:expires>2017-10-07T12:00:00Z</P:expires>
+</P:subscribe>
+]]></artwork>
+                            </figure>
+
+                            If one or more topics are invalid the enitre request MUST fail without any subscriptions being recorded. In this case the server
+                            MUST return an error response containg a list of topics that failed. If a topic is valid but the authenticated user doesn't have
+                            access to any of the resources that the topic belongs to, the server SHOULD treat this topic as being invalid and the request SHOULD
+                            fail.
+                        </t>
+                        <t>
+                            TBD: response
+                        </t>
+                    </section>
+                </section>
+            </section>
+            <section title="App Server -&gt; Push Gateway subscribe workflow">
+                <t>
+                    When a client sends a request to subscribe to specific topics, the application server MUST foward the subscription to the chosen gateway or
+                    to the gateway that announced itself as a proxy for the chosen gateway.
+                </t>
+                <t>
+                    If a gateway acts as a proxy for another gateway it MUST forward the request to the proxied gateway.
+                </t>
+                <t>
+                    The following example shows a request to subscribe to two topics.
+
+                    <figure>
+                        <artwork><![CDATA[
+POST / HTTP/1.1
+Host: push.example.com
+Content-Type: application/json
+
+{
+  "push-subscribe": {
+    "topics": [ "123", "abc" ],
+    "transport": {
+      "transport-uri": "https://push.example.com/transport",
+      "client-data": "XYZ"
+    },
+    "expires": "2017-10-07T12:00:00Z"
+  }
+}
+]]></artwork>
+                    </figure>
+
+                    Response: HTTP status for success, or HTTP status for failure with a XML/JSON error response body
+
+                    To acknowledge the subscription the gateway SHOULD send an initial PUSH notification to the client.
+                </t>
+                <t>
+                    TBD: responses
+
+                    A successful response containt the URL to send update messages to. The URL may be different than the transport URL. An Application Server
+                    MUST use this URL when sending push notifications to transports provided by clients.
+                    <figure>
+                        <artwork><![CDATA[
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{ "push-url": "https://push.example.com/" }
+]]></artwork>
+                    </figure>
+                </t>
+            </section>
+            <section title="App Server -&gt; Push Gateway push workflow">
+                <t>Whenever a substantial change occurs in any of the resources, the application server sends a Push Message to the gateway containing the
+                    Topics of the resources that have changed.
+
+                    The following example sends a push notification for the Topics "123" and "abc". The message for Topic "123" also contains a "client-id" to
+                    omit any notification to the sole client that modified the resource and caused this push message. The second message has a low priority and
+                    no "client-id". Such a message could be generated by multiple clients acknowledging an alarm on a shared calendar.
+                    <figure>
+                        <artwork><![CDATA[
+POST / HTTP/1.1
+Host: push.example.com
+Content-Type: application/json
+
+{
+  "push": {
+    "messages" : [{
+      "topic": "123",
+      "priority": 100,
+      "timestamp": "2017-10-01T14:00:52Z",
+      "client-id": "xyz"
+    }, {
+      "topic": "abc",
+      "priority": 0,
+      "timestamp": "2017-10-01T14:00:53Z"
+    }]
+  }
+} 
+]]></artwork>
+                    </figure>
+
+                    Response: HTTP status for success, or HTTP status for failure with a XML/JSON error response body It's not an error if a topic is unknown or
+                    there are no active subscribers for this topic. Instead the response will contain a list of all topics without subscribers. The application
+                    server SHOULD update its topic-to-gateway mapping accordingly. The application server MUST assume that topics which were in the request and
+                    not in the "no-subscribers" list have been pushed to the client.
+
+                    If there is a subscriber for each topic in the request, the no-subscribers list MUST be omitted.
+
+                    <figure>
+                        <artwork><![CDATA[
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{ "push-response": {} }
+]]></artwork>
+                    </figure>
+
+                    If there are topics without active subscribers:
+
+                    <figure>
+                        <artwork><![CDATA[
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "push-response": {
+	"no-subscribers": [
+      { "topic": "123"}
+    ]
+  }
+}
+]]></artwork>
+                    </figure>
+                </t>
+            </section>
+        </section>
+        <section title="Syntax Elements/Properties">
+            <section title="Push gateway protocol">
+                <section title="Bootstrapping">
+                    <figure>
+                        <artwork><![CDATA[
+; root element	    
+root {
+	push-transports
+}
+					
+; a list of push transports supported by a gateway
+; in the request sent by the application server this is empty
+push-transports "push-transports" [
+	* transport
+]
+
+transport "transport" {
+
+	; The uri of the transport.
+	"transport-uri" : uri,
+	
+	transport-data?
+}
+
+; optional data the client needs to know in order to subscribe
+; to allow easy conversion to other formats,
+; this object MUST NOT contain structured data.
+transport-data "transport-data" {
+  ^"": any
+}
+]]></artwork>
+                    </figure>
+                </section>
+                <section title="Subscription">
+                    <figure>
+                        <artwork><![CDATA[
+; root element
+root {
+	push-subscribe
+}
+					
+; the object describing the subscription
+push-subscribe "push-subscribe" {
+	topic-list,
+	selected-transport,
+	expires
+}
+
+; The list of topics to subscribe to. Unless a previous
+; subscription is updated by a request, existing
+; subscriptions won't be affected by new subscriptions.
+topic-list "topics" [
+	* topic
+}
+			
+; The chosen transport type
+selected-transport "selected-transport" {
+	
+	; The transport-uri of the chosen transport
+	"transport-uri" : uri,
+	
+	; The client-data string as sent by the client
+	"client-data" : string
+}
+	
+; The time of when the subscription expires
+; must be a UTC timestamp following
+; https://tools.ietf.org/html/rfc3339
+expires "expires" : RFC 3339 timestamp 
+
+]]></artwork>
+                    </figure>
+
+
+                    <figure>
+                        <artwork><![CDATA[
+; root element
+root {
+	error
+}
+
+; the object describing the failure
+error "error" {
+	invalid-topic-list
+}
+
+
+; The list of topics that the user can't subscribe to
+invalid-topic-list "invalid-topics" [
+	1* topic
+}
+]]></artwork>
+                    </figure>
+
+                </section>
+                <section title="Update notification">
+                    <figure>
+                        <artwork><![CDATA[
+; The root object
+root {
+	"push" [ 1* message ] 
+}
+
+; A message object, describing the update  
+message {
+	topic,
+	? priority,
+	timestamp,
+	? client-id
+}
+
+; The topic of the resource that has been updated
+topic "topic" : string
+
+; The priority of the change, with 0 being the lowest and 100
+; being the highest priority
+; If omitted, implementations SHOULD default to 50.
+priority "priority" : integer 0..100
+
+; The time of when the change occurred. The value MUST be a
+; timestamp in UTC following https://tools.ietf.org/html/rfc3339
+; If the server aggregated multiple updates before sending the push
+; message, this MUST be the timestamp of the most recent update.
+timestamp "timestamp" : RFC 3339 timestamp
+
+; An optional id that identifies the client that triggered the update
+; notification. Push gateways can use this information to suppress
+; push messages to this particular client, in order to avoid
+; unnecessary sync operations.
+; If the server aggregated multiple updates from different clients
+; into one message, it MUST omit the client-id to ensure all clients
+; receive the push message.
+client-id "client-id": string
+
+; root element of the push subscribe response
+root {
+	? no-subscribers-list
+}
+
+; A list of topics without active subscribers.
+; Applications servers SHOULD not send further push messages for the
+; enlisted topics to this transport unless a new client subscribes on
+; this transport.
+no-subscribers-list "no-subscribers" [
+    1* topic }
+]
+
+]]></artwork>
+                    </figure>
+                </section>
+            </section>
+            <section title="XML Element definitions">
+                <section title="WebDAV Properties">
+                    <section title="DAV-PUSH:push-subscribe-URL">
+                        <t>
+                            <list style="hanging">
+                                <t hangText="Name:">push-subscribe-URL</t>
+                                <t hangText="Namespace:">urn:ietf:params:xml:ns:dav-push</t>
+                                <t hangText="Purpose:">Specifies the address to send the subscription requests to.
+                                </t>
+                                <t hangText="Description:">The push-subscribe-URL element contains exactly one DAV:href element with a URL that points to the
+                                    subscription service endpoint.
+                                </t>
+                                <t hangText="Definition:">
+                                    <figure>
+                                        <artwork><![CDATA[
+<!ELEMENT push-subscribe-URL (DAV:href)>
+]]></artwork>
+                                    </figure>
+                                </t>
+                            </list>
+                        </t>
+                    </section>
+                    <section title="DAV-PUSH:supported-transport-set">
+                        <t>
+                            <list style="hanging">
+                                <t hangText="Name:">supported-transport-set</t>
+                                <t hangText="Namespace:">urn:ietf:params:xml:ns:dav-push</t>
+                                <t hangText="Purpose:">Specifies a list of transports supported by the application server.
+                                </t>
+                                <t hangText="Description:">This element contains the set of push transports supported by the server. The transport-uri element
+                                    of each transport must be unique within the set of transports.
+                                </t>
+                                <t>The set MAY contain one transport element without any child elements to indicate that the client may provide its own
+                                    transport.
+                                </t>
+                                <t hangText="Definition:">
+                                    <figure>
+                                        <artwork><![CDATA[
+<!ELEMENT supported-transport-set (transport*)>
+]]></artwork>
+                                    </figure>
+                                </t>
+                            </list>
+                        </t>
+                    </section>
+                    <section title="DAV-PUSH:transport">
+                        <t>
+                            <list style="hanging">
+                                <t hangText="Name:">transport</t>
+                                <t hangText="Namespace:">urn:ietf:params:xml:ns:dav-push</t>
+                                <t hangText="Purpose:">Describes a specific transport.</t>
+                                <t hangText="Description:">A transport element represents a specific push transport path to clients on a specific service. In
+                                    general it contains a transport-uri element that uniquely identifies the transport.
+                                </t>
+                                <t hangText="Definition:">
+                                    <figure>
+                                        <artwork><![CDATA[
+<!ELEMENT transport (transport-uri,
+			transport-data, refresh-interval)?>
+]]></artwork>
+                                    </figure>
+                                </t>
+                            </list>
+                        </t>
+                    </section>
+                    <section title="DAV-PUSH:transport-uri">
+                        <t>
+                            <list style="hanging">
+                                <t hangText="Name:">transport-uri</t>
+                                <t hangText="Namespace:">urn:ietf:params:xml:ns:dav-push</t>
+                                <t hangText="Purpose:">Specifies the URI that identifes the transport.</t>
+                                <t hangText="Description:">Clients compare the provided transport-uris to the transport-uris they support.
+                                </t>
+                                <t hangText="Definition:">
+                                    <figure>
+                                        <artwork><![CDATA[
+<!ELEMENT transport-uri (#PCDATA)>
+PCDATA value: The URI identifying the transport.
+]]></artwork>
+                                    </figure>
+                                </t>
+                            </list>
+                        </t>
+                    </section>
+                    <section title="DAV-PUSH:transport-data">
+                        <t>
+                            <list style="hanging">
+                                <t hangText="Name:">transport-data</t>
+                                <t hangText="Namespace:">urn:ietf:params:xml:ns:dav-push</t>
+                                <t hangText="Purpose:">Contains a list of additional attributes that client needs to know in order to subscribe on this
+                                    transport.
+                                </t>
+                                <t hangText="Description:"/>
+                                <t hangText="Definition:">
+                                    <figure>
+                                        <artwork><![CDATA[
+<!ELEMENT transport-data ANY>
+]]></artwork>
+                                    </figure>
+                                </t>
+                            </list>
+                        </t>
+                    </section>
+                    <section title="DAV-PUSH:refresh-interval">
+                        <t>
+                            <list style="hanging">
+                                <t hangText="Name:">refresh-interval</t>
+                                <t hangText="Namespace:">urn:ietf:params:xml:ns:dav-push</t>
+                                <t hangText="Purpose:">Specifies the maximum refresh interval.</t>
+                                <t hangText="Description:">Specifies the duration in seconds after which the client is expected to re-subscribe. If the client
+                                    didn't res-subscribe whithin this time the gateway MAY remove all subscriptions and no further push notifications will be
+                                    delivered to the client until it subscribes again.
+                                </t>
+                                <t hangText="Definition:">
+                                    <figure>
+                                        <artwork><![CDATA[
+<!ELEMENT refresh-interval (#PCDATA)>
+PCDATA value: the maximum refresh interval in seconds
+]]></artwork>
+                                    </figure>
+                                </t>
+                            </list>
+                        </t>
+                    </section>
+                    <section title="DAV-PUSH:topic">
+                        <t>
+                            <list style="hanging">
+                                <t hangText="Name:">topic</t>
+                                <t hangText="Namespace:">urn:ietf:params:xml:ns:dav-push</t>
+                                <t hangText="Purpose:">Specifies the push topic of a resource.</t>
+                                <t hangText="Description:">The topic identifies the name of the update channel for a resource. Clients send the topic in a
+                                    subscription request to inform application server and gateway that it wants to receive update notifications for the
+                                    resource.
+                                </t>
+                                <t>This document doesn't specify a specific format for topics nor a specifc algorithm to generate them.
+                                </t>
+                                <t>Server developers MUST ensure that topics on different installations won't colide.</t>
+                                <t>Resources within the same domain MAY share topics.</t>
+                                <t hangText="Definition:">
+                                    <figure>
+                                        <artwork><![CDATA[
+<!ELEMENT topic (#PCDATA)>
+PCDATA value: the push topic
+]]></artwork>
+                                    </figure>
+                                </t>
+                            </list>
+                        </t>
+                    </section>
+                    <section title="DAV-PUSH:version">
+                        <t>
+                            <list style="hanging">
+                                <t hangText="Name:">push-version</t>
+                                <t hangText="Namespace:">urn:ietf:params:xml:ns:dav-push</t>
+                                <t hangText="Purpose:">Specifies the highest version number of the push protocol supported by this server.
+                                </t>
+                                <t hangText="Description:"/>
+                                <t hangText="Definition:">
+                                    <figure>
+                                        <artwork><![CDATA[
+<!ELEMENT push-version (#PCDATA)>
+PCDATA value: the highest push protocol version number
+              supported by the application server
+]]></artwork>
+                                    </figure>
+                                </t>
+                            </list>
+                        </t>
+                    </section>
+                </section>
+                <section title="Subscription request">
+                    <section title="DAV-PUSH:subscribe">
+                        <t>
+                            <list style="hanging">
+                                <t hangText="Name:">subscribe</t>
+                                <t hangText="Namespace:">urn:ietf:params:xml:ns:dav-push</t>
+                                <t hangText="Purpose:">Represents a subscription request document.</t>
+                                <t hangText="Description:">The subscribe request contains all information to subscribe to specific topics selecting a specific
+                                    transport to deliver push notifications.
+                                </t>
+                                <t>A subscription must have an expiration date after which the subscriptions will become void.</t>
+                                <t hangText="Definition:">
+                                    <figure>
+                                        <artwork><![CDATA[
+<!ELEMENT subscribe (topic+, selected-transport,
+			expires)>
+]]></artwork>
+                                    </figure>
+                                </t>
+                            </list>
+                        </t>
+                    </section>
+                    <section title="DAV-PUSH:selected-transport">
+                        <t>
+                            <list style="hanging">
+                                <t hangText="Name:">selected-transport</t>
+                                <t hangText="Namespace:">urn:ietf:params:xml:ns:dav-push</t>
+                                <t hangText="Purpose:">Specifies the transport the client has chosen.</t>
+                                <t hangText="Description:">The selected-transport element contains the transport-uri of the transport that the client has chosen
+                                    for push delivery. It also contains a client-data element to be forwarded to the push gateway.
+                                </t>
+                                <t hangText="Definition:">
+                                    <figure>
+                                        <artwork><![CDATA[
+<!ELEMENT selected-transport (transport-uri,
+			client-data)>
+]]></artwork>
+                                    </figure>
+                                </t>
+                            </list>
+                        </t>
+                    </section>
+                    <section title="DAV-PUSH:client-data">
+                        <t>
+                            <list style="hanging">
+                                <t hangText="Name:">client-data</t>
+                                <t hangText="Namespace:">urn:ietf:params:xml:ns:dav-push</t>
+                                <t hangText="Purpose:">Contains a string the client needs to provide to the push-gateway for the chosen transport.
+                                </t>
+                                <t hangText="Description:">
+                                    This element provides a mechanism for the client to communicate to the gateway. The format of the data string is not defined
+                                    in this document. The application server MUST forward the client-data string as provided by the client.
+                                    <vspace/>
+                                    Gateways SHOULD use this to authenticate clients.
+                                </t>
+                                <t hangText="Definition:">
+                                    <figure>
+                                        <artwork><![CDATA[
+<!ELEMENT client-data (#PCDATA)>
+PCDATA value: client data as required by the push gateway
+]]></artwork>
+                                    </figure>
+                                </t>
+                                <t>
+                                    <list style="hanging">
+                                        <t hangText="Name:">invalid-topics (precondition)</t>
+                                        <t hangText="Purpose:">The request could not succeed, because it contained invalid push topics. This element contains
+                                            one topic element for each rejected push topic. The client may repeat the request without those topics.
+                                        </t>
+                                        <t hangText="Defintion:"/>
+                                    </list>
+                                    <figure>
+                                        <artwork><![CDATA[
+
+<!ELEMENT invalid-topics (topic+)>
+
+]]></artwork>
+                                    </figure>
+                                </t>
+                            </list>
+                        </t>
+                    </section>
+                </section>
+            </section>
+        </section>
+        <section title="HTTP Headers for DAV-Push">
+            <section title="Push-Client-Id Header">
+                <figure>
+                    <artwork type="abnf2616"><![CDATA[
+Push-Client-Id = "Push-Client-Id" ":" token
+]]></artwork>
+                </figure>
+                <t>The client sends this header to identify itself to the application server as the modifying instance. If the application server didn't
+                    coalesce multiple updates from different clients into a single push message, it SHOULD include the value in the update notification message.
+                    The provided token (<xref target="RFC7230"/>) MUST be percent-encoded as per<xref target="RFC3986"/>. Gateways can use this information to
+                    suppress push messages to this particular client.
+                </t>
+                <t>The actual value of token is part of the contract between client and gateway. The token MUST NOT contain any sensitive data like user name or
+                    device identifiers. It SHOULD be either a random or an obfuscated token (using a cryptographic hash function).
+                </t>
+            </section>
+        </section>
+        <section title="Guidelines">
+            <section title="Application Servers">
+                <t>Servers may want to implement some form of "keep-alive" within the push protocol to ensures clients know they are still connected in cases
+                    where actual data changes happen at long intervals (e.g., a calendar user who only makes changes once a day)
+                </t>
+                <t>
+                    Priorities:
+
+                    Range 0 - 100 - 0 is lowest and 100 is highest
+
+                    e.g.: low priority - updates due to other attendees changing their partstat
+
+                    high priority - updates to events ocurring in the next 24 hours
+
+                    Priority is used by a client to indicate what level of push they want at a specific time. It can also be used by the push gateway or push
+                    delivery system to throttle push notifications to the client based on load.
+                </t>
+                <t>Servers MAY delay the delivery of push notifications for several seconds in order to coalesce notifications. This is useful to give the
+                    server a certain amount of control over the client's behavior during times of high load.
+                </t>
+                <t>
+                    Servers MUST NOT coalesce push notifications based on priority.
+                </t>
+                <t>Application servers MAY allow clients to provide their own transports. If the transport-uri is not among the transport-uris as advertised by
+                    the application server, the transport-uri MUST be an HTTPS URL. If a client sends such a transport-uri, the application server SHOULD
+                    perform a transport discovery on the provided URL to discover all transports supported on this gateway.
+                </t>
+            </section>
+            <section title="Clients">
+                <t>Clients MUST be prepared that they might receive an initial push notification that acknowledges the subscription before the response to the
+                    push-subscribe request has been received.
+                </t>
+                <t>Clients SHOULD NOT rely solely on push notifications. The framework described in this document does not make any guarantees about the
+                    delivery of a push notification. Clients should be prepared to trigger a synchronization themselves if no push message has been received
+                    within some time period.
+                </t>
+                <t>Clients can expect that sometimes they will get a push but then not detect any actual changes when they sync (i.e., "no-op" push from server
+                    as a "keep-alive" mechanism).
+                </t>
+            </section>
+            <section title="Push Gateway">
+                <t>A Push Gateway SHOULD require some kind of authentication to be encoded in the client-data string. This document doesn't specify any
+                    authentication methods. However, among others, encrypting the client-data string with a shared secret and digitally signing the data are two
+                    possible options to achieve this.
+                </t>
+                <t>Client data MAY contain additional per-client preferences, like minimum priority to deliver or maximum delay of notifications when doing
+                    coalescing. This is part of the contract between client and transport an not subject of this specification.
+                </t>
+                <t>Gateways MAY coalesce push notifications based on priority.</t>
+            </section>
+        </section>
+        <section title="Security Considerations">
+            <t>To prevent abuse of the service, Push Gateways SHOULD require either servers or clients or both to authenticate. Servers SHOULD authenticate
+                every request of Protocol #2 via HTTP.
+            </t>
+            <t>
+                Push Gateways use the &lt;gateway-data&gt; information to authenticate subscription requests from a Server by relating them to Client
+                authorization requests. Clients will typically be authenticating to Servers to access protected data on the server and thus SHOULD authenticate
+                when using Protocol #1.
+            </t>
+        </section>
+        <section title="IANA Considerations">
+            <t>This document uses a URN to describe a new XML namespace conforming to the registry mechanism described in<xref target="RFC3688"/>.
+            </t>
+            <section title="Namespace Registration">
+                <t>
+                    Registration request for the push namespace:
+                </t>
+                <t>
+                    URI: urn:ietf:params:xml:ns:dav-push
+                </t>
+                <t>
+                    Registrant Contact: The IESG &lt;iesg@ietf.org&gt;
+                </t>
+                <t>
+                    XML: None - not applicable for namespace registrations.
+                </t>
+            </section>
+        </section>
+    </middle>
+    <back>
+        <references title="Normative References">
+            &rfc2119; &rfc3339; &rfc3688; &rfc3986; &rfc7230;
+        </references>
+        <section title="Change History (To be removed by RFC Editor before publication)">
+            <t>
+                Changes in -01:
+                <list style="numbers">
+                    <t/>
+                </list>
+            </t>
+        </section>
+    </back>
+</rfc>
