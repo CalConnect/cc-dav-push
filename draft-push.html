@@ -412,12 +412,12 @@
 <link href="#rfc.authors" rel="Chapter"/>
 
 
-  <meta name="generator" content="xml2rfc version 2.5.1 - http://tools.ietf.org/tools/xml2rfc" />
+  <meta name="generator" content="xml2rfc version 2.5.2 - http://tools.ietf.org/tools/xml2rfc" />
   <link rel="schema.dct" href="http://purl.org/dc/terms/" />
 
   <meta name="dct.creator" content="Gajda, M." />
   <meta name="dct.identifier" content="urn:ietf:id:draft-gajda-dav-push-00" />
-  <meta name="dct.issued" scheme="ISO8601" content="2017-4-10" />
+  <meta name="dct.issued" scheme="ISO8601" content="2017-4-17" />
   <meta name="dct.abstract" content="This specification defines a framework and protocols for a push notification system that allows clients, application servers and push notification servers to interact with each other in a standardized manner.  " />
   <meta name="description" content="This specification defines a framework and protocols for a push notification system that allows clients, application servers and push notification servers to interact with each other in a standardized manner.  " />
 
@@ -438,10 +438,10 @@
 </tr>
 <tr>
   <td class="left">Intended status: Standards Track</td>
-  <td class="right">April 10, 2017</td>
+  <td class="right">April 17, 2017</td>
 </tr>
 <tr>
-  <td class="left">Expires: October 12, 2017</td>
+  <td class="left">Expires: October 19, 2017</td>
   <td class="right"></td>
 </tr>
 
@@ -462,7 +462,7 @@
 <p>This Internet-Draft is submitted in full conformance with the provisions of BCP 78 and BCP 79.</p>
 <p>Internet-Drafts are working documents of the Internet Engineering Task Force (IETF).  Note that other groups may also distribute working documents as Internet-Drafts.  The list of current Internet-Drafts is at http://datatracker.ietf.org/drafts/current/.</p>
 <p>Internet-Drafts are draft documents valid for a maximum of six months and may be updated, replaced, or obsoleted by other documents at any time.  It is inappropriate to use Internet-Drafts as reference material or to cite them other than as "work in progress."</p>
-<p>This Internet-Draft will expire on October 12, 2017.</p>
+<p>This Internet-Draft will expire on October 19, 2017.</p>
 <h1 id="rfc.copyrightnotice">
   <a href="#rfc.copyrightnotice">Copyright Notice</a>
 </h1>
@@ -526,24 +526,24 @@
 
 <dl>
   <dt>Application Server</dt>
-  <dd style="margin-left: 8">Provides resources a client application might want to monitor for changes.  </dd>
+  <dd style="margin-left: 8">Provides resources a client application might want to monitor for changes. Typical applications are email, calendars and address books.  </dd>
   <dt>Push Gateway</dt>
-  <dd style="margin-left: 8">An adapter with a standardized interface that connects Push Delivery Service and Application Server. A Push Gateway provides or relays one or multiple delivery channels, the so called Transports, to specific Push Delivery Services.  </dd>
+  <dd style="margin-left: 8">A service to provide a common, standardized interface to Push Delivery Services. A Push Gateway provides or relays one or multiple delivery channels, the so called Transports.  </dd>
   <dt>Push Delivery Service</dt>
-  <dd style="margin-left: 8">A Service that provides the actual push transport mechanism to the client application.  </dd>
+  <dd style="margin-left: 8">A Service which provides the actual push transport mechanism to the client application.  </dd>
   <dt>Transport</dt>
-  <dd style="margin-left: 8">A transport is a logical channel to a specific Push Delivery Service, provided by a Push Gateway. A Transport is identified by the transport-uri. If the transport-uri is an HTTPS URL, the providing push gateway MUST accept connections to this URL.  </dd>
+  <dd style="margin-left: 8">A Transport is a logical channel to a specific Push Delivery Service, provided by a Push Gateway. It is identified by the transport-uri.  </dd>
   <dt>Client Application</dt>
   <dd style="margin-left: 8">An application that uses the services of the Application Server and wants to get notified instantaneously about certain changes on the server. A client application typically runs on a mobile or desktop device.  </dd>
   <dt>Push Notification</dt>
   <dd style="margin-left: 8">A message sent from the Application server to the Client Application to notify the client of an update. The basic information carried by the notification is "there was a change" for a specific Topic.  </dd>
   <dt>Topic</dt>
-  <dd style="margin-left: 8">A topic is a name for a notification feed or channel. Each watchable resource has a topic that clients can subscribe to.  Each subscriber to a particular topic will receive a notification when a substantial change was made to any of the resources with that topic.  </dd>
+  <dd style="margin-left: 8">A Topic is a name for a notification feed or channel. Each watchable resource has a Topic that clients can subscribe to.  Each subscriber to a particular topic will receive a notification when a substantial change was made to any of the resources with that Topic.  </dd>
 </dl>
 
 <p> </p>
 <h1 id="rfc.section.4"><a href="#rfc.section.4">4.</a> Architecture</h1>
-<p id="rfc.section.4.p.1">This document introduces a new entity called "Push Gateway" which acts as a proxy between an application server and a push delivery service. A Push Gateway provides at least one Transport. Each Transport is identified by a URI and connects to exactly one Push Delivery Service.  </p>
+<p id="rfc.section.4.p.1">This document introduces an entity called "Push Gateway" which acts as a proxy between an application server and a push delivery service. A Push Gateway provides at least one Transport. Each Transport is identified by a URI and connects to exactly one Push Delivery Service.  </p>
 <p id="rfc.section.4.p.2">Push Gateways MAY support relaying, so a push gateway might forward all or some notifications to another push gateway.  </p>
 <pre>
     +----------------------------+
@@ -575,7 +575,7 @@
 </pre>
 <h1 id="rfc.section.4.1"><a href="#rfc.section.4.1">4.1.</a> Application Server</h1>
 <p id="rfc.section.4.1.p.1">The server is responsible for generating push topics and sending update notifications to the Push Gateway. A push topic is a unique token that identifies the update notification feed of a resource or a group of resources. The topic is forwarded to the Push Gateway whenever a relevant change in one of these resources occurs.  </p>
-<p id="rfc.section.4.1.p.2">This document doesn't specify how topics are generated. However, for privacy reasons the topic MUST NOT contain user names, user data (like folder/collection names) or URLs in plain text. If a server doesn't maintain opaque, anonymous identifiers SHOULD use a hash algorithm, like SHA256 to generate an opaque identifier from resource properties.  </p>
+<p id="rfc.section.4.1.p.2">This document doesn't specify how topics are generated. However, for privacy reasons the topic MUST NOT contain user names, user data (like folder/collection names) or URLs in plain text. If a server doesn't maintain opaque, anonymous identifiers it SHOULD use a hash algorithm, like SHA256, to generate an opaque identifier from resource properties.  </p>
 <p id="rfc.section.4.1.p.3">Push topics MAY be generated on a per-user base for shared resources.  </p>
 <p id="rfc.section.4.1.p.4">A server MAY change push topics at any time to improve privacy. If doing so the server MUST continue to send out push notifications for the old topic until all subscriptions to that topic have expired.  </p>
 <p id="rfc.section.4.1.p.5">The application server maintains a mapping of subscribed push topics to a list of push gateways. It updates this mapping whenever </p>
@@ -1062,7 +1062,9 @@ PCDATA value: the maximum refresh interval in seconds
   <dt>Purpose:</dt>
   <dd style="margin-left: 8">Specifies the maximum refresh interval.</dd>
   <dt>Description:</dt>
-  <dd style="margin-left: 8">Specifies the duration in seconds after which the client is expected to re-subscribe. If the client didn't res-subscribe whithin this time the gateway MAY remove all subscriptions and no further push notifications will be delivered to the client until it subscribes again.  </dd>
+  <dd style="margin-left: 8">Specifies the duration in seconds after which the client is expected to re-subscribe. If the client didn't res-subscribe within this period of time the gateway MUST remove all subscriptions and no further push notifications will be delivered to the client until it subscribes again.  </dd>
+  <dt></dt>
+  <dd style="margin-left: 8">A Push Gateway MUST not accept subscription requests with an expiration time that would exceed the refresh interval.</dd>
   <dt>Definition:</dt>
   <dd style="margin-left: 8"/>
 </dl>
@@ -1087,7 +1089,7 @@ PCDATA value: the push topic
   <dt></dt>
   <dd style="margin-left: 8">This document doesn't specify a specific format for topics nor a specifc algorithm to generate them.  </dd>
   <dt></dt>
-  <dd style="margin-left: 8">Server developers MUST ensure that topics on different installations won't colide.</dd>
+  <dd style="margin-left: 8">Server developers MUST ensure that topics on different installations won't collide.</dd>
   <dt></dt>
   <dd style="margin-left: 8">Resources within the same domain MAY share topics.</dd>
   <dt>Definition:</dt>
@@ -1192,7 +1194,7 @@ PCDATA value: client data as required by the push gateway
       <dd style="margin-left: 8">invalid-topics (precondition)</dd>
       <dt>Purpose:</dt>
       <dd style="margin-left: 8">The request could not succeed, because it contained invalid push topics. This element contains one topic element for each rejected push topic. The client may repeat the request without those topics.  </dd>
-      <dt>Defintion:</dt>
+      <dt>Definition:</dt>
       <dd style="margin-left: 8"/>
     </dl>
     <p> </p>

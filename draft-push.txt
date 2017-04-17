@@ -4,8 +4,8 @@
 
 Network Working Group                                           M. Gajda
 Internet-Draft                                                      dmfs
-Intended status: Standards Track                          April 10, 2017
-Expires: October 12, 2017
+Intended status: Standards Track                          April 17, 2017
+Expires: October 19, 2017
 
 
            Push Discovery and Notification Dispatch Protocol
@@ -33,7 +33,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on October 12, 2017.
+   This Internet-Draft will expire on October 19, 2017.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Gajda                   Expires October 12, 2017                [Page 1]
+Gajda                   Expires October 19, 2017                [Page 1]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -90,7 +90,7 @@ Table of Contents
      8.1.  Application Servers . . . . . . . . . . . . . . . . . . .  21
      8.2.  Clients . . . . . . . . . . . . . . . . . . . . . . . . .  22
      8.3.  Push Gateway  . . . . . . . . . . . . . . . . . . . . . .  22
-   9.  Security Considerations . . . . . . . . . . . . . . . . . . .  22
+   9.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
    10. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  23
      10.1.  Namespace Registration . . . . . . . . . . . . . . . . .  23
    11. Normative References  . . . . . . . . . . . . . . . . . . . .  23
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Gajda                   Expires October 12, 2017                [Page 2]
+Gajda                   Expires October 19, 2017                [Page 2]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -138,21 +138,19 @@ Internet-Draft                  DAV-Push                      April 2017
 3.  Terminology
 
    Application Server  Provides resources a client application might
-      want to monitor for changes.
+      want to monitor for changes.  Typical applications are email,
+      calendars and address books.
 
-   Push Gateway  An adapter with a standardized interface that connects
-      Push Delivery Service and Application Server.  A Push Gateway
-      provides or relays one or multiple delivery channels, the so
-      called Transports, to specific Push Delivery Services.
+   Push Gateway  A service to provide a common, standardized interface
+      to Push Delivery Services.  A Push Gateway provides or relays one
+      or multiple delivery channels, the so called Transports.
 
-   Push Delivery Service  A Service that provides the actual push
+   Push Delivery Service  A Service which provides the actual push
       transport mechanism to the client application.
 
-   Transport  A transport is a logical channel to a specific Push
-      Delivery Service, provided by a Push Gateway.  A Transport is
-      identified by the transport-uri.  If the transport-uri is an HTTPS
-      URL, the providing push gateway MUST accept connections to this
-      URL.
+   Transport  A Transport is a logical channel to a specific Push
+      Delivery Service, provided by a Push Gateway.  It is identified by
+      the transport-uri.
 
    Client Application  An application that uses the services of the
       Application Server and wants to get notified instantaneously about
@@ -161,31 +159,30 @@ Internet-Draft                  DAV-Push                      April 2017
 
    Push Notification  A message sent from the Application server to the
       Client Application to notify the client of an update.  The basic
+      information carried by the notification is "there was a change"
+      for a specific Topic.
 
 
 
 
-Gajda                   Expires October 12, 2017                [Page 3]
+Gajda                   Expires October 19, 2017                [Page 3]
 
 Internet-Draft                  DAV-Push                      April 2017
 
 
-      information carried by the notification is "there was a change"
-      for a specific Topic.
-
-   Topic  A topic is a name for a notification feed or channel.  Each
-      watchable resource has a topic that clients can subscribe to.
+   Topic  A Topic is a name for a notification feed or channel.  Each
+      watchable resource has a Topic that clients can subscribe to.
       Each subscriber to a particular topic will receive a notification
       when a substantial change was made to any of the resources with
-      that topic.
+      that Topic.
 
 4.  Architecture
 
-   This document introduces a new entity called "Push Gateway" which
-   acts as a proxy between an application server and a push delivery
-   service.  A Push Gateway provides at least one Transport.  Each
-   Transport is identified by a URI and connects to exactly one Push
-   Delivery Service.
+   This document introduces an entity called "Push Gateway" which acts
+   as a proxy between an application server and a push delivery service.
+   A Push Gateway provides at least one Transport.  Each Transport is
+   identified by a URI and connects to exactly one Push Delivery
+   Service.
 
    Push Gateways MAY support relaying, so a push gateway might forward
    all or some notifications to another push gateway.
@@ -221,7 +218,10 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017                [Page 4]
+
+
+
+Gajda                   Expires October 19, 2017                [Page 4]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -237,9 +237,9 @@ Internet-Draft                  DAV-Push                      April 2017
    This document doesn't specify how topics are generated.  However, for
    privacy reasons the topic MUST NOT contain user names, user data
    (like folder/collection names) or URLs in plain text.  If a server
-   doesn't maintain opaque, anonymous identifiers SHOULD use a hash
-   algorithm, like SHA256 to generate an opaque identifier from resource
-   properties.
+   doesn't maintain opaque, anonymous identifiers it SHOULD use a hash
+   algorithm, like SHA256, to generate an opaque identifier from
+   resource properties.
 
    Push topics MAY be generated on a per-user base for shared resources.
 
@@ -277,7 +277,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017                [Page 5]
+Gajda                   Expires October 19, 2017                [Page 5]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -333,7 +333,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017                [Page 6]
+Gajda                   Expires October 19, 2017                [Page 6]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -389,7 +389,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017                [Page 7]
+Gajda                   Expires October 19, 2017                [Page 7]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -445,7 +445,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017                [Page 8]
+Gajda                   Expires October 19, 2017                [Page 8]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -501,7 +501,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017                [Page 9]
+Gajda                   Expires October 19, 2017                [Page 9]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -557,7 +557,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017               [Page 10]
+Gajda                   Expires October 19, 2017               [Page 10]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -613,7 +613,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017               [Page 11]
+Gajda                   Expires October 19, 2017               [Page 11]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -669,7 +669,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017               [Page 12]
+Gajda                   Expires October 19, 2017               [Page 12]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -725,7 +725,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017               [Page 13]
+Gajda                   Expires October 19, 2017               [Page 13]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -781,7 +781,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017               [Page 14]
+Gajda                   Expires October 19, 2017               [Page 14]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -837,7 +837,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017               [Page 15]
+Gajda                   Expires October 19, 2017               [Page 15]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -893,7 +893,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017               [Page 16]
+Gajda                   Expires October 19, 2017               [Page 16]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -949,7 +949,7 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-Gajda                   Expires October 12, 2017               [Page 17]
+Gajda                   Expires October 19, 2017               [Page 17]
 
 Internet-Draft                  DAV-Push                      April 2017
 
@@ -979,9 +979,12 @@ Internet-Draft                  DAV-Push                      April 2017
 
    Description:  Specifies the duration in seconds after which the
       client is expected to re-subscribe.  If the client didn't res-
-      subscribe whithin this time the gateway MAY remove all
+      subscribe within this period of time the gateway MUST remove all
       subscriptions and no further push notifications will be delivered
       to the client until it subscribes again.
+
+      A Push Gateway MUST not accept subscription requests with an
+      expiration time that would exceed the refresh interval.
 
    Definition:
 
@@ -998,23 +1001,23 @@ Internet-Draft                  DAV-Push                      April 2017
 
    Description:  The topic identifies the name of the update channel for
       a resource.  Clients send the topic in a subscription request to
-      inform application server and gateway that it wants to receive
-      update notifications for the resource.
 
 
 
 
-
-Gajda                   Expires October 12, 2017               [Page 18]
+Gajda                   Expires October 19, 2017               [Page 18]
 
 Internet-Draft                  DAV-Push                      April 2017
 
+
+      inform application server and gateway that it wants to receive
+      update notifications for the resource.
 
       This document doesn't specify a specific format for topics nor a
       specifc algorithm to generate them.
 
       Server developers MUST ensure that topics on different
-      installations won't colide.
+      installations won't collide.
 
       Resources within the same domain MAY share topics.
 
@@ -1054,17 +1057,19 @@ Internet-Draft                  DAV-Push                      April 2017
       subscribe to specific topics selecting a specific transport to
       deliver push notifications.
 
+
+
+
+
+Gajda                   Expires October 19, 2017               [Page 19]
+
+Internet-Draft                  DAV-Push                      April 2017
+
+
       A subscription must have an expiration date after which the
       subscriptions will become void.
 
    Definition:
-
-
-
-Gajda                   Expires October 12, 2017               [Page 19]
-
-Internet-Draft                  DAV-Push                      April 2017
-
 
    <!ELEMENT subscribe (topic+, selected-transport,
                            expires)>
@@ -1109,23 +1114,22 @@ Internet-Draft                  DAV-Push                      April 2017
 
 
 
-      Name:  invalid-topics (precondition)
-
-      Purpose:  The request could not succeed, because it contained
-         invalid push topics.  This element contains one topic element
 
 
 
-
-Gajda                   Expires October 12, 2017               [Page 20]
+Gajda                   Expires October 19, 2017               [Page 20]
 
 Internet-Draft                  DAV-Push                      April 2017
 
 
+      Name:  invalid-topics (precondition)
+
+      Purpose:  The request could not succeed, because it contained
+         invalid push topics.  This element contains one topic element
          for each rejected push topic.  The client may repeat the
          request without those topics.
 
-      Defintion:
+      Definition:
 
 
    <!ELEMENT invalid-topics (topic+)>
@@ -1167,17 +1171,15 @@ Internet-Draft                  DAV-Push                      April 2017
    delivery system to throttle push notifications to the client based on
    load.
 
-   Servers MAY delay the delivery of push notifications for several
-   seconds in order to coalesce notifications.  This is useful to give
 
 
-
-
-Gajda                   Expires October 12, 2017               [Page 21]
+Gajda                   Expires October 19, 2017               [Page 21]
 
 Internet-Draft                  DAV-Push                      April 2017
 
 
+   Servers MAY delay the delivery of push notifications for several
+   seconds in order to coalesce notifications.  This is useful to give
    the server a certain amount of control over the client's behavior
    during times of high load.
 
@@ -1221,18 +1223,22 @@ Internet-Draft                  DAV-Push                      April 2017
 
    Gateways MAY coalesce push notifications based on priority.
 
+
+
+
+
+
+
+Gajda                   Expires October 19, 2017               [Page 22]
+
+Internet-Draft                  DAV-Push                      April 2017
+
+
 9.  Security Considerations
 
    To prevent abuse of the service, Push Gateways SHOULD require either
    servers or clients or both to authenticate.  Servers SHOULD
    authenticate every request of Protocol #2 via HTTP.
-
-
-
-Gajda                   Expires October 12, 2017               [Page 22]
-
-Internet-Draft                  DAV-Push                      April 2017
-
 
    Push Gateways use the <gateway-data> information to authenticate
    subscription requests from a Server by relating them to Client
@@ -1275,20 +1281,19 @@ Internet-Draft                  DAV-Push                      April 2017
               RFC 3986, DOI 10.17487/RFC3986, January 2005,
               <http://www.rfc-editor.org/info/rfc3986>.
 
+
+
+
+
+Gajda                   Expires October 19, 2017               [Page 23]
+
+Internet-Draft                  DAV-Push                      April 2017
+
+
    [RFC7230]  Fielding, R., Ed. and J. Reschke, Ed., "Hypertext Transfer
               Protocol (HTTP/1.1): Message Syntax and Routing",
               RFC 7230, DOI 10.17487/RFC7230, June 2014,
               <http://www.rfc-editor.org/info/rfc7230>.
-
-
-
-
-
-
-Gajda                   Expires October 12, 2017               [Page 23]
-
-Internet-Draft                  DAV-Push                      April 2017
-
 
 Appendix A.  Change History (To be removed by RFC Editor before
              publication)
@@ -1336,9 +1341,4 @@ Author's Address
 
 
 
-
-
-
-
-
-Gajda                   Expires October 12, 2017               [Page 24]
+Gajda                   Expires October 19, 2017               [Page 24]

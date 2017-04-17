@@ -78,15 +78,16 @@
         <section title="Terminology">
             <t>
                 <list style="hanging">
-                    <t hangText="Application Server">Provides resources a client application might want to monitor for changes.
+                    <t hangText="Application Server">Provides resources a client application might want to monitor for changes. Typical applications are email,
+                        calendars and address books.
                     </t>
-                    <t hangText="Push Gateway">An adapter with a standardized interface that connects Push Delivery Service and Application Server. A Push
-                        Gateway provides or relays one or multiple delivery channels, the so called Transports, to specific Push Delivery Services.
+                    <t hangText="Push Gateway">A service to provide a common, standardized interface to Push Delivery Services. A Push Gateway provides or
+                        relays one or multiple delivery channels, the so called Transports.
                     </t>
-                    <t hangText="Push Delivery Service">A Service that provides the actual push transport mechanism to the client application.
+                    <t hangText="Push Delivery Service">A Service which provides the actual push transport mechanism to the client application.
                     </t>
-                    <t hangText="Transport">A transport is a logical channel to a specific Push Delivery Service, provided by a Push Gateway. A Transport is
-                        identified by the transport-uri. If the transport-uri is an HTTPS URL, the providing push gateway MUST accept connections to this URL.
+                    <t hangText="Transport">A Transport is a logical channel to a specific Push Delivery Service, provided by a Push Gateway. It is identified
+                        by the transport-uri.
                     </t>
                     <t hangText="Client Application">
                         An application that uses the services of the Application Server and wants to get notified instantaneously about certain changes on the
@@ -96,16 +97,16 @@
                         A message sent from the Application server to the Client Application to notify the client of an update. The basic information carried by
                         the notification is "there was a change" for a specific Topic.
                     </t>
-                    <t hangText="Topic">A topic is a name for a notification feed or channel. Each watchable resource has a topic that clients can subscribe to.
+                    <t hangText="Topic">A Topic is a name for a notification feed or channel. Each watchable resource has a Topic that clients can subscribe to.
                         Each subscriber to a particular topic will receive a notification when a substantial change was made to any of the resources with that
-                        topic.
+                        Topic.
                     </t>
                 </list>
             </t>
         </section>
         <section title="Architecture">
-            <t>This document introduces a new entity called "Push Gateway" which acts as a proxy between an application server and a push delivery service. A
-                Push Gateway provides at least one Transport. Each Transport is identified by a URI and connects to exactly one Push Delivery Service.
+            <t>This document introduces an entity called "Push Gateway" which acts as a proxy between an application server and a push delivery service. A Push
+                Gateway provides at least one Transport. Each Transport is identified by a URI and connects to exactly one Push Delivery Service.
             </t>
             <t>Push Gateways MAY support relaying, so a push gateway might forward all or some notifications to another push gateway.
             </t>
@@ -145,8 +146,8 @@
                     relevant change in one of these resources occurs.
                 </t>
                 <t>This document doesn't specify how topics are generated. However, for privacy reasons the topic MUST NOT contain user names, user data (like
-                    folder/collection names) or URLs in plain text. If a server doesn't maintain opaque, anonymous identifiers SHOULD use a hash algorithm, like
-                    SHA256 to generate an opaque identifier from resource properties.
+                    folder/collection names) or URLs in plain text. If a server doesn't maintain opaque, anonymous identifiers it SHOULD use a hash algorithm,
+                    like SHA256, to generate an opaque identifier from resource properties.
                 </t>
                 <t>Push topics MAY be generated on a per-user base for shared resources.
                 </t>
@@ -750,9 +751,10 @@ PCDATA value: The URI identifying the transport.
                                 <t hangText="Namespace:">urn:ietf:params:xml:ns:dav-push</t>
                                 <t hangText="Purpose:">Specifies the maximum refresh interval.</t>
                                 <t hangText="Description:">Specifies the duration in seconds after which the client is expected to re-subscribe. If the client
-                                    didn't res-subscribe whithin this time the gateway MAY remove all subscriptions and no further push notifications will be
-                                    delivered to the client until it subscribes again.
+                                    didn't res-subscribe within this period of time the gateway MUST remove all subscriptions and no further push notifications
+                                    will be delivered to the client until it subscribes again.
                                 </t>
+                                <t>A Push Gateway MUST not accept subscription requests with an expiration time that would exceed the refresh interval.</t>
                                 <t hangText="Definition:">
                                     <figure>
                                         <artwork><![CDATA[
@@ -776,7 +778,7 @@ PCDATA value: the maximum refresh interval in seconds
                                 </t>
                                 <t>This document doesn't specify a specific format for topics nor a specifc algorithm to generate them.
                                 </t>
-                                <t>Server developers MUST ensure that topics on different installations won't colide.</t>
+                                <t>Server developers MUST ensure that topics on different installations won't collide.</t>
                                 <t>Resources within the same domain MAY share topics.</t>
                                 <t hangText="Definition:">
                                     <figure>
@@ -788,7 +790,22 @@ PCDATA value: the push topic
                                 </t>
                             </list>
                         </t>
-                    </section>
+                    </section><!--
+  ~ Copyright 2017 SchedJoules
+  ~
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
                     <section title="DAV-PUSH:version">
                         <t>
                             <list style="hanging">
@@ -879,7 +896,7 @@ PCDATA value: client data as required by the push gateway
                                         <t hangText="Purpose:">The request could not succeed, because it contained invalid push topics. This element contains
                                             one topic element for each rejected push topic. The client may repeat the request without those topics.
                                         </t>
-                                        <t hangText="Defintion:"/>
+                                        <t hangText="Definition:"/>
                                     </list>
                                     <figure>
                                         <artwork><![CDATA[
