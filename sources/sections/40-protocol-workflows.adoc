@@ -1,0 +1,248 @@
+== Protocol Workflows
+
+=== App Server <-> Push Gateway bootstrap workflow
+
+This protocol allows an application server to initialize the supported push transports by querying a set of configured push gateways. This requires that the application server knows the root URL of each configured gateway. In order to retrieve the list of supported transports it posts a JSON object with an empty list of push-transports to each gateway.
+
+The following request shows the bootstrap request of an application server that was configured with the Push Gateway URL https://push.example.com/gateway
+
+[source]
+----
+POST /gateway
+Host: push.example.com
+Content-Type: application/json
+Content-Length: xxx
+
+{ "push-transports": []}
+----
+
+The push gateway responds with a JSON object that contains an array of push transports.
+
+[source]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: xxx
+
+{ "push-transports": [
+  {
+    "transport": {
+      "transport-uri":
+        "https://push.example.com/transport",
+      "refresh-interval": 172800,
+      "transport-data" : { ... }
+    }
+  }{
+    "transport": {
+      "transport-uri":
+        "urn:uuid:01234567-0123-0123-0123-0123456789ab",
+      "refresh-interval": 172800,
+      "transport-data" : { ... }
+    }
+  }]
+}
+----
+
+=== Client <-> App Server workflow
+
+The communication between Client and Application Server is defined in the respective application protocol. The application protocol needs to be extended in order to support push.
+
+This document describes the general idea behind the required extensions and gives a concrete definition for a WebDAV extension.
+
+==== Client discovery and subscription workflow - Generic
+
+TBD:
+
+==== Unsubscribe
+
+This document doesn't specify an explicit unsubscribe method. A client that doesn't wish to receive any further push notifications for a specific topic MAY send a subscription with an expiration date in the past.
+
+An application server which receives such a subscription MUST handle it like any other subscription. In particular the Application Server MUST:
+
+* verify the Push Topic and
+* forward the susbcription to the Push Gateway.
+
+A Push Gateway which receives a subscription with a passed expiration date MUST:
+
+* remove the client from the list of subscribers to this topic and
+* not send out any further push messages to this client.
+
+==== Client discovery and subscription workflow - WebDAV
+
+===== Push discovery
+
+The following example shows a PROPFIND request on a user's calendar home to discover push support.
+
+[source]
+----
+PROPFIND http://calendar.example.com/calendars/
+Content-Type: application/xml
+Depth: 0
+Content-Length: xxx
+
+<D:propfind xmlns:D="DAV:" xmlns:P="urn:ietf:params:xml:ns:dav-push">
+  <D:prop>
+    <P:subscribe-URL> />
+    <P:supported-transport-set />
+    <P:topic />
+    <P:version />
+  </D:prop>
+</D:propfind>
+----
+
+The server responds with the respective properties:
+
+[source]
+----
+HTTP/1.1 207 Multistatus
+Content-Type: application/xml; charset=UTF-8
+Content-Length: xxx
+
+<D:multistatus xmlns:D="DAV:">
+  <D:response>
+    <D:href>/calendars/</D:href>
+    <D:propstat>
+      <D:prop>
+        <P:subscribe-URL>
+          <D:href>https://calendar.example.com/subscribe</D:href>
+        </P:subscribe-URL>
+        <P:supported-transport-set>
+          <P:transport />
+          <P:transport>
+            <P:transport-uri>urn:uuid:01234567-0123-0123-0123-0123456789ab</P:transport-uri>
+            <P:transport-data>...</P:transport-data>
+            <P:refresh-interval>172800</P:refresh-interval>
+          </P:transport>
+          <P:transport>
+            <P:transport-uri>https://push.example.com/transport</P:transport-uri>
+            <P:transport-data>...</P:transport-data>
+            <P:refresh-interval>172800</P:refresh-interval>
+          </P:transport>
+        </P:supported-transport-set>
+        <P:topic>123</P:topic>
+        <P:version>1</P:version>
+      </D:prop>
+      <D:status>HTTP/1.1 200 OK</D:status>
+    </D:propstat>
+  </D:response>
+</D:multistatus>
+----
+
+===== Push subscribe
+
+Calendar server → Client - CS server advertises its supported push mechanisms
+
+Clients request POST to P:subscribe-URL - does the actual subscription to the calendar server:
+
+[source]
+----
+POST /subscribe HTTP/1.1
+Host: calendar.example.com
+Content-Type: application/xml; charset=UTF-8
+
+<P:subscribe xmlns:P="urn:ietf:params:xml:ns:dav-push">
+  <P:topic>123<P:topic>
+  <P:topic>abc<P:topic>
+  <P:selected-transport>
+    <P:transport-uri>https://push.example.com/transport</D:transport-uri>
+    <P:client-data>XYZ</D:client-data>
+  </P:selected-transport>
+  <P:expires>2017-10-07T12:00:00Z</P:expires>
+</P:subscribe>
+----
+
+If one or more topics are invalid the entire request MUST fail without any subscriptions being recorded. In this case the server MUST return an error response containing a list of topics that failed. If a topic is valid but the authenticated user doesn't have access to any of the resources that the topic belongs to the server SHOULD treat this topic as being invalid and the request SHOULD fail.
+
+=== App Server -> Push Gateway subscribe workflow
+
+When a client sends a request to subscribe to specific topics the application server MUST forward the subscription to the chosen gateway or to the gateway that announced itself as a proxy for the chosen gateway.
+
+If a gateway acts as a proxy for another gateway it MUST forward the request to the proxied gateway.
+
+The following example shows a request to subscribe to two topics.
+
+[source]
+----
+POST / HTTP/1.1
+Host: push.example.com
+Content-Type: application/json
+
+{
+  "push-subscribe": {
+    "topics": [ "123", "abc" ],
+    "transport": {
+      "transport-uri": "https://push.example.com/transport",
+      "client-data": "XYZ"
+    },
+    "expires": "2017-10-07T12:00:00Z"
+  }
+}
+----
+
+To acknowledge the subscription the gateway SHOULD send an initial PUSH notification to the client.
+
+A successful response contains the URL to send update messages to. The URL may be different than the transport URL. An Application Server MUST use this URL when sending push notifications to transports provided by clients.
+
+[source]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{ "push-url": "https://push.example.com/" }
+----
+
+=== App Server -> Push Gateway push workflow
+
+Whenever a substantial change occurs in any of the resources the application server sends a Push Message to the gateway containing the Topics of the resources that have changed.
+
+The following example sends a push notification for the Topics "123" and "abc". The message for Topic "123" also contains a "client-id" to omit any notification to the sole client that modified the resource and caused this push message. The second message has a low priority and no "client-id". Such a message could be generated by multiple clients acknowledging an alarm on a shared calendar.
+
+[source]
+----
+POST / HTTP/1.1
+Host: push.example.com
+Content-Type: application/json
+
+{
+  "push": {
+    "messages" : [{
+      "topic": "123",
+      "priority": 100,
+      "timestamp": "2017-10-01T14:00:52Z",
+      "client-id": "xyz"
+    }, {
+      "topic": "abc",
+      "priority": 0,
+      "timestamp": "2017-10-01T14:00:53Z"
+    }]
+  }
+}
+----
+
+Response: HTTP status for success or HTTP status for failure with a XML/JSON error response body. It's not an error if a topic is unknown or there are no active subscribers for this topic. Instead the response will contain a list of all topics without subscribers. The application server SHOULD update its topic-to-gateway mapping accordingly. The application server MUST assume that topics which were in the request and not in the "no-subscribers" list have been pushed to the client.
+
+If there is a subscriber for each topic in the request the no-subscribers list MUST be omitted.
+
+[source]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{ "push-response": {} }
+----
+
+If there are topics without active subscribers:
+
+[source]
+----
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  "push-response": {
+    "no-subscribers": [
+      { "topic": "123"}
+    ]
+  }
+}
+----

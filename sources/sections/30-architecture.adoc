@@ -1,0 +1,72 @@
+== Architecture
+
+This document introduces an entity called "Push Gateway" which acts as a proxy between an application server and a push delivery service. A Push Gateway provides at least one Transport. Each Transport is identified by a URI and connects to exactly one Push Delivery Service.
+
+Push Gateways MAY support relaying so a push gateway might forward all or some notifications to another push gateway.
+
+[source,ascii-art]
+....
++----------------------------+
+|     Application Server     |
++-----------------------+----+
+       ^                |
+       |                |
+       |                |
+       |                |
+       |                v
+       |      +-------------------------+
+       |      |       Push Gateway      |
+       |      +---------+---------------+
+       |                |
+       |                |
+       |                |
+       |                v
+       |      +-------------------------+
+       |      |  Push delivery Service  |
+       |      +---------+---------------+
+       |                |
+       |                |
+       |                |
+       |                |
+       |                v
+ +-----+--------------------+
+ |     Client Application   |
+ +--------------------------+
+....
+
+=== Application Server
+
+The server is responsible for generating push topics and sending update notifications to the Push Gateway. A push topic is a unique token that identifies the update notification feed of a resource or a group of resources. The topic is forwarded to the Push Gateway whenever a relevant change in one of these resources occurs.
+
+This document doesn't specify how topics are generated. However for privacy reasons the topic MUST NOT contain user names user data (like folder/collection names) or URLs in plain text. If a server doesn't maintain opaque anonymous identifiers it SHOULD use a hash algorithm like SHA256 to generate an opaque identifier from resource properties.
+
+Push topics MAY be generated on a per-user base for shared resources.
+
+A server MAY change push topics at any time to improve privacy. If doing so the server MUST continue to send out push notifications for the old topic until all subscriptions to that topic have expired.
+
+The application server maintains a mapping of subscribed push topics to a list of push gateways. It updates this mapping whenever:
+
+* A new subscription request is received
+* A response from the push gateway indicates that there are no active subscribers for a particular topic.
+
+The application server doesn't maintain references to push clients because this information is opaque to the application server.
+
+=== Push Gateway
+
+The Push Gateway maintains a mapping of push-topics to a list of subscribed clients and expiration times. It updates the list whenever:
+
+* it receives a new subscription
+* a subscription expires or
+* the Push Delivery Service returns that a specific client is no longer available.
+
+If a push message for a specific topic is received the push gateway will notify all clients with an active (not expired) subscription for that topic.
+
+A push gateway may relay messages for other gateways. A gateway that supports relaying MUST maintain a map of topics to gateways just like an application server.
+
+=== Push Delivery Service
+
+TBD: Minimum requirements for PDS to support this protocol. Describe what state information the PDS needs to maintain.
+
+=== Client
+
+TBD: what information does the client need to maintain

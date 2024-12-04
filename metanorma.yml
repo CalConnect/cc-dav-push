@@ -1,0 +1,10 @@
+---
+metanorma:
+  source:
+    files:
+      - sources/cc-70025.adoc
+      - sources/draft-gajda-dav-push-00.adoc
+
+  collection:
+    organization: CalConnect
+    name: Calendaring and scheduling -- Push Discovery and Notification Dispatch Protocol

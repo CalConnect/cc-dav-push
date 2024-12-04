@@ -1,0 +1,15 @@
+== Terminology
+
+Application Server:: Provides resources a client application might want to monitor for changes. Typical applications are email calendars and address books.
+
+Push Gateway:: A service to provide a common standardized interface to Push Delivery Services. A Push Gateway provides or relays one or multiple delivery channels the so called Transports.
+
+Push Delivery Service:: A Service which provides the actual push transport mechanism to the client application.
+
+Transport:: A Transport is a logical channel to a specific Push Delivery Service provided by a Push Gateway. It is identified by the transport-uri.
+
+Client Application:: An application that uses the services of the Application Server and wants to get notified instantaneously about certain changes on the server. A client application typically runs on a mobile or desktop device.
+
+Push Notification:: A message sent from the Application server to the Client Application to notify the client of an update. The basic information carried by the notification is "there was a change" for a specific Topic.
+
+Topic:: A Topic is a name for a notification feed or channel. Each watchable resource has a Topic that clients can subscribe to. Each subscriber to a particular topic will receive a notification when a substantial change was made to any of the resources with that Topic.

@@ -1,0 +1,10 @@
+== Security Considerations
+
+To prevent abuse of the service, Push Gateways SHOULD require either servers or
+clients or both to authenticate. Servers SHOULD authenticate every request of
+Protocol #2 via HTTP.
+
+Push Gateways use the `<gateway-data>` information to authenticate subscription
+requests from a Server by relating them to Client authorization requests.
+Clients will typically be authenticating to Servers to access protected data on
+the server and thus SHOULD authenticate when using Protocol #1.

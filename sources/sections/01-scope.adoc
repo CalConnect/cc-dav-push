@@ -1,0 +1,10 @@
+
+== Scope
+
+This document defines a framework and protocols for a push notification
+system, called the Push Discovery and Notification Dispatch Protocol,
+that allows clients application servers and push notification servers to
+interact with each other in a standardized manner.
+
+This document further provides an implementation of the protocol on WebDAV
+as an extension.

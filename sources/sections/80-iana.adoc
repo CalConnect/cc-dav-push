@@ -1,0 +1,13 @@
+== IANA Considerations
+
+This document uses a URN to describe a new XML namespace conforming to the registry mechanism described in RFC 3688.
+
+=== Namespace Registration
+
+Registration request for the push namespace:
+
+URI:: urn:ietf:params:xml:ns:dav-push
+
+Registrant Contact:: The IESG <iesg@ietf.org>
+
+XML:: None - not applicable for namespace registrations.

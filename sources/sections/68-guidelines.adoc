@@ -1,0 +1,38 @@
+== Guidelines
+
+=== Application Servers
+
+Servers may want to implement some form of "keep-alive" within the push protocol to ensures clients know they are still connected in cases where actual data changes happen at long intervals (e.g., a calendar user who only makes changes once a day).
+
+Priorities:
+
+Range 0 - 100 - 0 is lowest and 100 is highest
+
+e.g.:
+
+* low priority - updates due to other attendees changing their partstat
+* high priority - updates to events occurring in the next 24 hours
+
+Priority is used by a client to indicate what level of push they want at a specific time. It can also be used by the push gateway or push delivery system to throttle push notifications to the client based on load.
+
+Servers MAY delay the delivery of push notifications for several seconds in order to coalesce notifications. This is useful to give the server a certain amount of control over the client's behavior during times of high load.
+
+Servers MUST NOT coalesce push notifications based on priority.
+
+Application servers MAY allow clients to provide their own transports. If the transport-uri is not among the transport-uris as advertised by the application server, the transport-uri MUST be an HTTPS URL. If a client sends such a transport-uri, the application server SHOULD perform a transport discovery on the provided URL to discover all transports supported on this gateway.
+
+=== Clients
+
+Clients MUST be prepared that they might receive an initial push notification that acknowledges the subscription before the response to the push-subscribe request has been received.
+
+Clients SHOULD NOT rely solely on push notifications. The framework described in this document does not make any guarantees about the delivery of a push notification. Clients should be prepared to trigger a synchronization themselves if no push message has been received within some time period.
+
+Clients can expect that sometimes they will get a push but then not detect any actual changes when they sync (i.e., "no-op" push from server as a "keep-alive" mechanism).
+
+=== Push Gateway
+
+A Push Gateway SHOULD require some kind of authentication to be encoded in the client-data string. This document doesn't specify any authentication methods. However, among others, encrypting the client-data string with a shared secret and digitally signing the data are two possible options to achieve this.
+
+Client data MAY contain additional per-client preferences, like minimum priority to deliver or maximum delay of notifications when doing coalescing. This is part of the contract between client and transport an not subject of this specification.
+
+Gateways MAY coalesce push notifications based on priority.

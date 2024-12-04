@@ -1,0 +1,123 @@
+== Syntax Elements/Properties
+
+=== Push gateway protocol
+
+==== Bootstrapping
+
+[source]
+----
+; root element
+root {
+        push-transports
+}
+
+; a list of push transports supported by a gateway
+; in the request sent by the application server this is empty
+push-transports "push-transports" [
+        * transport
+]
+
+transport "transport" {
+        ; The uri of the transport.
+        "transport-uri" : uri,
+        transport-data?
+}
+
+; optional data the client needs to know in order to subscribe
+; to allow easy conversion to other formats,
+; this object MUST NOT contain structured data.
+transport-data "transport-data" {
+  ^"": any
+}
+----
+
+==== Subscription
+
+[source]
+----
+; root element
+root {
+        push-subscribe
+}
+
+; the object describing the subscription
+push-subscribe "push-subscribe" {
+        topic-list,
+        selected-transport,
+        expires
+}
+
+; The list of topics to subscribe to. Unless a previous
+; subscription is updated by a request, existing
+; subscriptions won't be affected by new subscriptions.
+topic-list "topics" [
+        * topic
+}
+
+; The chosen transport type
+selected-transport "selected-transport" {
+        ; The transport-uri of the chosen transport
+        "transport-uri" : uri,
+        ; The client-data string as sent by the client
+        "client-data" : string
+}
+
+; The time of when the subscription expires
+; must be a UTC timestamp following
+; https://tools.ietf.org/html/rfc3339
+expires "expires" : RFC 3339 timestamp
+----
+
+==== Update notification
+
+[source]
+----
+; The root object
+root {
+        "push" [ 1* message ]
+}
+
+; A message object, describing the update
+message {
+        topic,
+        ? priority,
+        timestamp,
+        ? client-id
+}
+
+; The topic of the resource that has been updated
+topic "topic" : string
+
+; The priority of the change, with 0 being the lowest and 100
+; being the highest priority
+; If omitted, implementations SHOULD default to 50.
+priority "priority" : integer 0..100
+
+; The time of when the change occurred. The value MUST be a
+; timestamp in UTC following https://tools.ietf.org/html/rfc3339
+; If the server aggregated multiple updates before sending the push
+; message, this MUST be the timestamp of the most recent update.
+timestamp "timestamp" : RFC 3339 timestamp
+
+; An optional id that identifies the client that triggered the update
+; notification. Push gateways can use this information to suppress
+; push messages to this particular client, in order to avoid
+; unnecessary sync operations.
+; If the server aggregated multiple updates from different clients
+; into one message, it MUST omit the client-id to ensure all clients
+; receive the push message.
+client-id "client-id": string
+
+; root element of the push subscribe response
+root {
+        ? no-subscribers-list
+}
+
+; A list of topics without active subscribers.
+; Applications servers SHOULD not send further push messages for the
+; enlisted topics to this transport unless a new client subscribes on
+; this transport.
+no-subscribers-list "no-subscribers" [
+    1* topic }
+]
+----

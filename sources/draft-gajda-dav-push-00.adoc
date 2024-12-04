@@ -1,0 +1,50 @@
+= Push Discovery and Notification Dispatch Protocol
+:doctype: internet-draft
+:docnumber: draft-gajda-dav-push-00
+:abbrev: DAV-Push
+:status: standard
+:ipr: trust200902
+:submissionType: individual
+:area: Applications
+:intended-series: full-standard
+:revdate: 2017-04-17
+:fullname: Marten Gajda
+:lastname: Gajda
+:forename_initials: M.
+:organization: dmfs GmbH
+:street: Schandauer Straße 34
+:city: Dresden
+:code: 01309
+:country: Germany
+:uri: http://dmfs.org
+:email: marten@dmfs.org
+:mn-document-class: ietf
+:mn-output-extensions: rfc,xml,txt,html,rxl
+:technical-committee: TC CALENDAR
+:keywords: push, CardDAV, CalDAV, WebDAV
+
+include::sections/00-abstract.adoc[]
+
+include::sections/00-intro.adoc[]
+
+include::sections/03-terms.adoc[]
+
+include::sections/30-architecture.adoc[]
+
+include::sections/40-protocol-workflows.adoc[]
+
+include::sections/60-syntax.adoc[]
+
+include::sections/65-xml-elements.adoc[]
+
+include::sections/67-http-headers.adoc[]
+
+include::sections/68-guidelines.adoc[]
+
+include::sections/70-security.adoc[]
+
+include::sections/80-iana.adoc[]
+
+include::sections-ietf/98-references.adoc[]
+
+include::sections-ietf/99-bibliography.adoc[]

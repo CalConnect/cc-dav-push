@@ -1,0 +1,214 @@
+== XML Element definitions
+
+=== WebDAV Properties
+
+==== DAV-PUSH:push-subscribe-URL
+
+Name:: push-subscribe-URL
+
+Namespace:: urn:ietf:params:xml:ns:dav-push
+
+Purpose:: Specifies the address to send the subscription requests to.
+
+Description:: The push-subscribe-URL element contains exactly one DAV:href element with a URL that points to the subscription service endpoint.
+
+Definition::
+[source,xml]
+----
+<!ELEMENT push-subscribe-URL (DAV:href)>
+----
+
+==== DAV-PUSH:supported-transport-set
+
+Name:: supported-transport-set
+
+Namespace:: urn:ietf:params:xml:ns:dav-push
+
+Purpose:: Specifies a list of transports supported by the application server.
+
+Description:: This element contains the set of push transports supported by the server. The transport-uri element of each transport must be unique within the set of transports.
++
+The set MAY contain one transport element without any child elements to indicate that the client may provide its own transport.
+
+Definition::
+[source,xml]
+----
+<!ELEMENT supported-transport-set (transport*)>
+----
+
+==== DAV-PUSH:transport
+
+Name:: transport
+
+Namespace:: urn:ietf:params:xml:ns:dav-push
+
+Purpose:: Describes a specific transport.
+
+Description:: A transport element represents a specific push transport path to clients on a specific service. In general it contains a transport-uri element that uniquely identifies the transport.
+
+Definition::
+[source,xml]
+----
+<!ELEMENT transport (transport-uri,
+                        transport-data, refresh-interval)?>
+----
+
+==== DAV-PUSH:transport-uri
+
+Name:: transport-uri
+
+Namespace:: urn:ietf:params:xml:ns:dav-push
+
+Purpose:: Specifies the URI that identifes the transport.
+
+Description:: Clients compare the provided transport-uris to the transport-uris they support.
+
+Definition::
+[source,xml]
+----
+<!ELEMENT transport-uri (#PCDATA)>
+PCDATA value: The URI identifying the transport.
+----
+
+==== DAV-PUSH:transport-data
+
+Name:: transport-data
+
+Namespace:: urn:ietf:params:xml:ns:dav-push
+
+Purpose:: Contains a list of additional attributes that client needs to know in order to subscribe on this transport.
+
+Description::
+
+Definition::
+[source,xml]
+----
+<!ELEMENT transport-data ANY>
+----
+
+==== DAV-PUSH:refresh-interval
+
+Name:: refresh-interval
+
+Namespace:: urn:ietf:params:xml:ns:dav-push
+
+Purpose:: Specifies the maximum refresh interval.
+
+Description:: Specifies the duration in seconds after which the client is expected to re-subscribe. If the client didn't res-subscribe within this period of time the gateway MUST remove all subscriptions and no further push notifications will be delivered to the client until it subscribes again.
++
+A Push Gateway MUST not accept subscription requests with an expiration time that would exceed the refresh interval.
+
+Definition::
+[source,xml]
+----
+<!ELEMENT refresh-interval (#PCDATA)>
+PCDATA value: the maximum refresh interval in seconds
+----
+
+==== DAV-PUSH:topic
+
+Name:: topic
+
+Namespace:: urn:ietf:params:xml:ns:dav-push
+
+Purpose:: Specifies the push topic of a resource.
+
+Description:: The topic identifies the name of the update channel for a resource. Clients send the topic in a subscription request to inform application server and gateway that it wants to receive update notifications for the resource.
++
+This document doesn't specify a specific format for topics nor a specifc algorithm to generate them.
++
+Server developers MUST ensure that topics on different installations won't collide.
++
+Resources within the same domain MAY share topics.
+
+Definition::
+[source,xml]
+----
+<!ELEMENT topic (#PCDATA)>
+PCDATA value: the push topic
+----
+
+==== DAV-PUSH:version
+
+Name:: push-version
+
+Namespace:: urn:ietf:params:xml:ns:dav-push
+
+Purpose:: Specifies the highest version number of the push protocol supported by this server.
+
+Description::
+
+Definition::
+[source,xml]
+----
+<!ELEMENT push-version (#PCDATA)>
+PCDATA value: the highest push protocol version number
+              supported by the application server
+----
+
+=== Subscription request
+
+==== DAV-PUSH:subscribe
+
+Name:: subscribe
+
+Namespace:: urn:ietf:params:xml:ns:dav-push
+
+Purpose:: Represents a subscription request document.
+
+Description:: The subscribe request contains all information to subscribe to specific topics selecting a specific transport to deliver push notifications.
++
+A subscription must have an expiration date after which the subscriptions will become void.
+
+Definition::
+[source,xml]
+----
+<!ELEMENT subscribe (topic+, selected-transport,
+                        expires)>
+----
+
+==== DAV-PUSH:selected-transport
+
+Name:: selected-transport
+
+Namespace:: urn:ietf:params:xml:ns:dav-push
+
+Purpose:: Specifies the transport the client has chosen.
+
+Description:: The selected-transport element contains the transport-uri of the transport that the client has chosen for push delivery. It also contains a client-data element to be forwarded to the push gateway.
+
+Definition::
+[source,xml]
+----
+<!ELEMENT selected-transport (transport-uri,
+                        client-data)>
+----
+
+==== DAV-PUSH:client-data
+
+Name:: client-data
+
+Namespace:: urn:ietf:params:xml:ns:dav-push
+
+Purpose:: Contains a string the client needs to provide to the push-gateway for the chosen transport.
+
+Description:: This element provides a mechanism for the client to communicate to the gateway. The format of the data string is not defined in this document. The application server MUST forward the client-data string as provided by the client.
++
+Gateways SHOULD use this to authenticate clients.
+
+Definition::
+[source,xml]
+----
+<!ELEMENT client-data (#PCDATA)>
+PCDATA value: client data as required by the push gateway
+----
+
+Name:: invalid-topics (precondition)
+
+Purpose:: The request could not succeed, because it contained invalid push topics. This element contains one topic element for each rejected push topic. The client may repeat the request without those topics.
+
+Definition::
+[source,xml]
+----
+<!ELEMENT invalid-topics (topic+)>
+----

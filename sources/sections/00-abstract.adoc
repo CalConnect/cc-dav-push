@@ -1,0 +1,7 @@
+[abstract]
+== Abstract
+
+This specification defines a framework and protocols for a push
+notification system that allows clients, application servers and push
+notification servers to interact with each other in a standardized
+manner.

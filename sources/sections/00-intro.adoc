@@ -1,0 +1,25 @@
+== Introduction
+
+In a client/server protocol clients can typically create update delete
+"resources" (data) on the server as well as retrieve data on the server.
+
+In many cases data can appear on the server as the result of some other client
+or server-side process interacting with the server. Thus clients need a way to
+detect when the data on the server has changed.
+
+Most protocols provide a data synchronization mechanism to support that but
+typically clients need to "poll" the server to find out when changes have
+occurred. Network based polling is inefficient and instead push notifications
+are preferred as a way of alerting clients to new data or changes to existing
+data on the server.
+
+== Conventions Used in This Document
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD",
+"SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this
+document are to be interpreted as described in <<RFC2119>>.
+
+When XML element types in the namespaces "DAV:" and
+"urn:ietf:params:xml:ns:dav-push" are referenced in this document outside of the
+context of an XML fragment, the string "DAV:" and "DAV-PUSH:" will be prefixed
+to the element type names respectively.

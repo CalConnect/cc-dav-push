@@ -1,0 +1,56 @@
+= Calendaring and scheduling -- Push Discovery and Notification Dispatch Protocol
+:docnumber: 70025
+:copyright-year: 2017
+:language: en
+:doctype: standard
+:edition: 1
+:fullname: Marten Gajda
+:lastname: Gajda
+:givenname: Marten
+:organization: dmfs GmbH
+:street: Schandauer Straße 34
+:city: Dresden
+:code: 01309
+:country: Germany
+:uri: http://dmfs.org
+:email: marten@dmfs.org
+:status: committee-draft
+:revdate: 2017-04-17
+:published-date: 2017-04-17
+:script: Latn
+:technical-committee: PUSH
+:mn-document-class: cc
+:mn-output-extensions: xml,html,pdf,rxl
+:local-cache-only:
+:data-uri-image:
+:keywords: push, CardDAV, CalDAV, WebDAV
+
+include::sections/00-abstract.adoc[]
+
+include::sections/00-foreword.adoc[]
+
+include::sections/00-intro.adoc[]
+
+include::sections/01-scope.adoc[]
+
+include::sections/02-normrefs.adoc[]
+
+include::sections/03-terms.adoc[]
+
+include::sections/30-architecture.adoc[]
+
+include::sections/40-protocol-workflows.adoc[]
+
+include::sections/60-syntax.adoc[]
+
+include::sections/65-xml-elements.adoc[]
+
+include::sections/67-http-headers.adoc[]
+
+include::sections/68-guidelines.adoc[]
+
+include::sections/70-security.adoc[]
+
+include::sections/80-iana.adoc[]
+
+include::sections/99-bibliography.adoc[]

@@ -1,0 +1,12 @@
+== HTTP Headers for DAV-Push
+
+=== Push-Client-Id Header
+
+[source]
+----
+Push-Client-Id = "Push-Client-Id" ":" token
+----
+
+The client sends this header to identify itself to the application server as the modifying instance. If the application server didn't coalesce multiple updates from different clients into a single push message, it SHOULD include the value in the update notification message. The provided token ([RFC7230]) MUST be percent-encoded as per [RFC3986]. Gateways can use this information to suppress push messages to this particular client.
+
+The actual value of token is part of the contract between client and gateway. The token MUST NOT contain any sensitive data like user name or device identifiers. It SHOULD be either a random or an obfuscated token (using a cryptographic hash function).
