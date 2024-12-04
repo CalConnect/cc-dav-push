@@ -28,7 +28,7 @@ WebDAV (CalDAV-SCHED) and the CalDAV Managed Attachments Extensions to WebDAV
 The document is published as the following:
 
 * CalConnect CC 70025
-* IETF draft-douglass-dav-push
+* IETF draft-gajda-dav-push
 
 
 == Structure
